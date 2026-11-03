@@ -1,0 +1,19 @@
+{
+  "thr": 80,
+  "pol": 0,
+  "auto": true,
+  "min_area": 2000,
+  "max_fraction": 0.6,
+  "max_objects": 8,
+  "label_mapping": {
+    "black": "s42",
+    "red": "s38",
+    "white": "s39",
+    "gray": "s17",
+    "yellow": "s07",
+    "brown": "s03",
+    "green": "s36",
+    "blue": "s34",
+    "purple": "s20"
+  }
+}

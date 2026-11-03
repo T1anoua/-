@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B220 矿石识别</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101821;color:#e6edf4;font:16px/1.6 system-ui,"Microsoft YaHei",sans-serif}main{max-width:1220px;margin:auto;padding:24px}h1{font-size:27px;margin:0}header{margin-bottom:20px;display:flex;gap:18px;justify-content:space-between;align-items:center}.layout{display:grid;grid-template-columns:minmax(400px,2fr) minmax(280px,1fr);gap:20px}.card{background:#1a2632;border:1px solid #304252;border-radius:12px;padding:18px}img{display:block;width:100%;aspect-ratio:4/3;object-fit:contain;background:#080c12;border-radius:7px}.row{display:flex;gap:8px;flex-wrap:wrap}button,select,input{font:inherit}button,select,input[type=number]{color:#e6edf4;background:#233748;border:1px solid #4e6475;border-radius:5px;padding:7px 10px}button{cursor:pointer}button:hover{background:#304c60}button.primary{background:#167265}label{display:block;margin:12px 0 4px}input[type=range]{width:100%}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.metrics b{display:block;font-size:21px;color:#73dcc3}.muted{color:#aebdcc;font-size:14px}#state{padding:8px 12px;background:#233748;border-radius:5px;margin:12px 0}#message{color:#83dec8;min-height:24px}a{color:#83dec8}.note{font-size:14px;color:#b1c0cc}input[type=number]{width:100%}select{width:100%}.name-card{margin:14px 0;padding:14px 16px;border:1px solid #365c59;border-radius:8px;background:#172f30}.name-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.name-line strong{font-size:25px;line-height:1.4}.tag{font-size:12px;background:#35483f;color:#d9dcad;border:1px solid #637356;border-radius:4px;padding:2px 6px}#swatch{display:inline-block;width:17px;height:17px;border-radius:50%;border:1px solid #b3c4d0;background:#82909d}.color-note{margin:8px 0 0;font-size:13px;color:#afc2c8}details{border-top:1px solid #304252;margin-top:16px;padding-top:12px}summary{cursor:pointer;font-weight:600}.rules{width:100%;font-size:14px;border-collapse:collapse;margin-top:10px}.rules td{padding:5px 2px;border-bottom:1px solid #304252}.rules td:first-child{width:64px}.badge{font-size:13px;color:#80d4bd;border:1px solid #365c59;border-radius:20px;padding:5px 10px;white-space:nowrap}@media(max-width:780px){.layout{grid-template-columns:1fr}main{padding:14px}header{align-items:flex-start}h1{font-size:23px}.badge{display:none}}
+</style>
+<style>
+.layout>.card{min-width:0}.targets-wrap{max-width:100%}
+.targets-wrap{overflow-x:auto;margin:14px 0 4px}.targets{width:100%;border-collapse:collapse;font-size:14px;min-width:580px}.targets th,.targets td{padding:8px 7px;text-align:left;border-bottom:1px solid #304252;white-space:nowrap}.targets th{color:#aebdcc;font-weight:500}.targets tr.active{background:#254641}.targets tbody tr{cursor:pointer}.targets tbody tr:hover{background:#233d40}.counter{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0}.counter strong{color:#80dcc0;font-size:25px}.counter select{max-width:280px}.track-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.limit-note{color:#ebce7a;font-size:13px;min-height:21px}@media(max-width:780px){.counter{flex-wrap:wrap}.counter select{max-width:100%;flex:1;min-width:180px}}
+</style>
+</head>
+<body><main>
+<header><div><h1>B220 多目标矿石识别</h1><div class="muted">逐个编号与跟踪 · 颜色示例名称 · 平面姿态</div></div><div class="badge">桌面应用入口保持可用</div></header>
+<div class="layout">
+<section class="card">
+<div class="row"><button onclick="view('')">识别画面</button><button onclick="view('/raw')">原始画面 / 调焦</button><button onclick="view('/mask')">分割画面</button></div>
+<div id="state">正在连接开发板…</div>
+<img id="video" src="/video" alt="开发板摄像头实时画面">
+<div class="counter"><div>当前目标 <strong id="targetCount">0</strong> 个</div><select id="targetSelect" aria-label="查看目标详情" onchange="selectTarget(this.value)"><option>暂无目标</option></select></div>
+<div class="limit-note" id="limitNote"></div>
+<div class="targets-wrap"><table class="targets" aria-label="当前全部矿石目标"><thead><tr><th>编号</th><th>名称（颜色示例）</th><th>位置 x, y</th><th>角度</th><th>面积</th></tr></thead><tbody id="targets"><tr><td colspan="5">等待目标进入画面</td></tr></tbody></table></div>
+<div class="name-card"><div class="name-line"><span id="swatch"></span><strong id="oreName">等待目标</strong><span class="tag">所选目标详情</span></div><div class="color-note" id="colorDetail">将多块岩石完整放入画面，彼此留出间隙。</div><div class="color-note">名称按颜色规则映射，不能据此确定矿物种类。</div></div>
+<div class="metrics"><div>位置 / 像素<b id="position">—</b></div><div>主轴角 / 度<b id="angle">—</b></div><div>轮廓面积 / 平方像素<b id="area">—</b></div><div>处理帧率<b id="fps">—</b></div></div>
+<p class="note" id="angleNote"></p><a href="/snapshot.jpg" target="_blank">打开带名称的识别截图</a>
+</section>
+<aside class="card">
+<strong>识别参数</strong>
+<label><input id="auto" type="checkbox" onchange="updateThreshold()"> 自动阈值（换颜色时推荐）</label>
+<label>手动亮度阈值 <output id="thrValue">100</output></label><input id="thr" type="range" min="0" max="255" value="100" oninput="byId('thrValue').textContent=this.value">
+<label>目标与背景</label><select id="pol"><option value="1">亮目标 / 暗背景</option><option value="0">暗目标 / 亮背景</option></select>
+<label>最小轮廓面积 / 平方像素</label><input id="min_area" type="number" value="2000" min="10" max="100000">
+<label>最大画面占比</label><input id="max_fraction" type="number" value="0.6" min="0.01" max="0.95" step="0.05">
+<label>最多显示目标数（1～12）</label><input id="max_objects" type="number" value="8" min="1" max="12" step="1">
+<p><button class="primary" onclick="save()">应用并保存参数</button></p><div id="message" role="status"></div>
+<details open><summary>颜色 → 标本名称</summary><table class="rules" aria-label="颜色示例标签"><tbody id="rules"></tbody></table><p><button class="primary" onclick="save()">保存名称映射</button></p><p class="note">从照片中的 42 个名称中选择每种颜色要显示的示例名。检测颜色后按该规则显示；同色标本需要你选择对应名称。</p></details>
+<details><summary>多块矿石怎样放置</summary><p class="note">每块矿石完整进入画面，彼此留出明显间隙，避免接触或遮挡。使用无图案的哑光背景，让所有目标与背景都有明显亮度差；分割画面中应能看到多个分开的白色区域。</p><p class="note">小矿石漏检时可降低“最小轮廓面积”。深色矿石配浅色背景；浅色矿石配深色背景。同画面亮暗差异很大的矿石，单一阈值未必能全部分开。</p><p class="note">编号用于短时间跟踪。合并、交叉遮挡、快速移动或离开画面后再回来，编号可能变化。名称仍按颜色映射，同色矿石不据此区分真实种类。</p></details>
+<details><summary>关闭后怎样再次打开</summary><p class="note">关闭窗口后，双击桌面“B220 矿石识别”即可。开发板持续运行，不需要再次上传代码。板子重新上电后会自动启动服务，请等待启动完成并保持网线连接。</p><p class="note">电脑只负责查看，板子上保存程序和参数。</p></details>
+<div class="muted" id="frameInfo"></div>
+</aside></div>
+<section class="card" style="margin-top:20px"><details open style="border:0;margin:0;padding:0"><summary>照片中的 42 项标本名称</summary><p class="note">按照片的 6 行 × 7 列顺序录入，保留标签上的商品名和简称。此名称库不是 42 类自动鉴定模型。</p><div id="catalogGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px"></div></details></section>
+</main>
+<script>
+let loaded=false, mode='', failures=0, cameraDown=false, mappingReady=false, selectedId=null, currentObjects=[], optionsSignature=null;
+const byId=id=>document.getElementById(id);
+function view(next){mode=next;byId('video').src='/video'+mode+'?t='+Date.now();}
+function updateThreshold(){byId('thr').disabled=byId('auto').checked;}
+function resetName(text){byId('oreName').textContent=text;byId('swatch').style.background='#82909d';byId('colorDetail').textContent='将多块岩石完整放入画面，彼此留出间隙。';}
+function selectTarget(value){selectedId=Number(value);renderSelected();}
+function renderSelected(){
+ const object=currentObjects.find(item=>item.id===selectedId),c=object?.classification;
+ for(const row of byId('targets').rows)row.classList.toggle('active',Number(row.dataset.id)===selectedId);
+ byId('targetSelect').value=selectedId===null?'':String(selectedId);
+ byId('position').textContent=object?object.x+', '+object.y:'—';byId('angle').textContent=object?object.angle_deg+'°':'—';byId('area').textContent=object?object.area_px:'—';
+ if(c){byId('oreName').textContent='#'+object.id+' · '+c.name;byId('swatch').style.background=c.swatch;byId('colorDetail').textContent=c.key==='unknown'?(c.reason==='scene_too_dark'?'场景和目标过暗，暂不判断颜色。':'颜色混杂或像素不足，暂不指定名称。'):'外观：'+c.color+' · 同色像素占比 '+Math.round(c.dominant_ratio*100)+'%（不是矿物识别置信度）';}else{resetName('等待目标');}
+ byId('angleNote').textContent=object&&!object.angle_reliable?'所选目标接近圆形，主轴角可能不稳定。':'';
+}
+function renderTargets(objects){
+ currentObjects=objects;if(!objects.some(item=>item.id===selectedId))selectedId=objects.length?objects[0].id:null;
+ const signature=JSON.stringify(objects.map(item=>[item.id,item.classification.name])),rebuildOptions=signature!==optionsSignature;optionsSignature=signature;
+ byId('targetCount').textContent=objects.length;byId('targets').replaceChildren();if(rebuildOptions)byId('targetSelect').replaceChildren();byId('targetSelect').disabled=!objects.length;
+ if(!objects.length){const row=document.createElement('tr'),cell=document.createElement('td');cell.colSpan=5;cell.textContent='等待目标进入画面';row.appendChild(cell);byId('targets').appendChild(row);if(rebuildOptions){const option=document.createElement('option');option.value='';option.textContent='暂无目标';byId('targetSelect').appendChild(option);}}
+ for(const object of objects){const row=document.createElement('tr');row.dataset.id=object.id;row.onclick=()=>selectTarget(object.id);const values=['#'+object.id,object.classification.name,object.x+', '+object.y,object.angle_deg+'°',String(object.area_px)];values.forEach((value,index)=>{const cell=document.createElement('td');if(index===0){const dot=document.createElement('span');dot.className='track-dot';dot.style.background=object.track_color;cell.appendChild(dot);}cell.appendChild(document.createTextNode(value));row.appendChild(cell);});byId('targets').appendChild(row);if(rebuildOptions){const option=document.createElement('option');option.value=object.id;option.textContent='#'+object.id+' · '+object.classification.name;byId('targetSelect').appendChild(option);}}
+ renderSelected();
+}
+async function save(){
+ const settings={thr:+byId('thr').value,auto:byId('auto').checked,pol:+byId('pol').value,min_area:+byId('min_area').value,max_fraction:+byId('max_fraction').value,max_objects:+byId('max_objects').value};
+ if(mappingReady){settings.label_mapping={};document.querySelectorAll('select[data-color]').forEach(select=>{settings.label_mapping[select.dataset.color]=select.value;});}
+ try{const r=await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(settings)});const data=await r.json();if(!r.ok)throw Error(data.error);byId('message').textContent='参数已保存，再次打开仍然有效';}catch(e){byId('message').textContent='保存失败：'+e.message;}
+}
+async function loadRules(){try{
+ const responses=await Promise.all(['/api/labels','/api/catalog','/api/status'].map(url=>fetch(url,{cache:'no-store'})));if(responses.some(r=>!r.ok))throw Error();const [data,catalog,status]=await Promise.all(responses.map(r=>r.json()));
+ for(const [key,label] of Object.entries(data.labels)){if(key==='unknown')continue;const row=document.createElement('tr'),colorCell=document.createElement('td'),nameCell=document.createElement('td'),select=document.createElement('select');colorCell.textContent=label.color;select.dataset.color=key;select.id='map_'+key;select.setAttribute('aria-label',label.color+'显示名称');select.style.fontSize='14px';for(const specimen of catalog.specimens){const option=document.createElement('option');option.value=specimen.id;option.textContent=specimen.name;select.appendChild(option);}select.value=(status.settings.label_mapping||catalog.default_mapping)[key];nameCell.appendChild(select);row.append(colorCell,nameCell);byId('rules').appendChild(row);}
+ for(const specimen of catalog.specimens){const item=document.createElement('div');item.textContent=String((specimen.row-1)*7+specimen.column).padStart(2,'0')+' · '+specimen.name;item.style.cssText='padding:8px 10px;border:1px solid #304252;border-radius:5px;background:#15212c';byId('catalogGrid').appendChild(item);}mappingReady=true;
+ }catch(e){byId('rules').textContent='名称库暂未加载，请刷新。';}}
+async function poll(){
+ try{
+  const r=await fetch('/api/status',{cache:'no-store',signal:AbortSignal.timeout(5000)});if(!r.ok)throw Error('HTTP '+r.status);const s=await r.json();
+  if(!loaded){for(const k of ['thr','pol','min_area','max_fraction','max_objects'])byId(k).value=s.settings[k];byId('auto').checked=s.settings.auto;byId('thrValue').textContent=s.settings.thr;updateThreshold();loaded=true;}
+  const unavailable=s.status.startsWith('camera_');byId('video').style.opacity=unavailable?'0.25':'1';byId('state').textContent=unavailable?'摄像头暂无新画面，请检查接线':s.detected?'正在跟踪 '+s.target_count+' 个目标；点击列表查看详情':'相机正常，尚未找到有效目标轮廓';
+  renderTargets(unavailable?[]:(s.objects||[]));byId('fps').textContent=unavailable?'—':Number(s.fps||0).toFixed(1)+' fps';if(unavailable)resetName('相机暂不可用');
+  byId('limitNote').textContent=s.limit_reached?'检测到 '+s.candidate_count+' 个有效轮廓，按面积显示前 '+s.target_count+' 个；可提高目标数上限。':'';
+  byId('frameInfo').textContent='帧 '+s.frame+' · 阈值 '+(s.threshold??'—')+' · '+(s.version||'');
+  if((failures||cameraDown)&&!unavailable)view(mode);failures=0;cameraDown=unavailable;
+ }catch(e){failures++;byId('state').textContent='正在等待开发板，请检查电源和网线；连接恢复后自动继续';byId('video').style.opacity='0.25';renderTargets([]);byId('fps').textContent='—';byId('limitNote').textContent='';resetName('开发板未连接');}
+ setTimeout(poll,700);
+}
+byId('video').onerror=()=>{cameraDown=true;};loadRules();poll();
+</script></body></html>

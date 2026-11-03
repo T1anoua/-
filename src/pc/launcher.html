@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>B220 矿石识别</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#101821;color:#e6edf4;font:17px/1.8 system-ui,"Microsoft YaHei",sans-serif;display:grid;place-items:center;min-height:100vh}.box{max-width:650px;margin:24px;padding:35px;border:1px solid #344859;background:#1a2632;border-radius:18px}h1{font-size:30px;margin:0 0 14px}p{color:#afbfce}.status{color:#82dec3}a{display:inline-block;border:1px solid #4c806f;border-radius:6px;padding:8px 16px;background:#185a4b;color:#fff;text-decoration:none}.small{font-size:14px;overflow-wrap:anywhere}</style>
+<div class="box"><h1>B220 矿石识别</h1><p id="status" class="status">正在连接开发板…</p><p>请给开发板供电，摄像头插在板子 USB 主机口，并连接电脑与板子的网线。相机就绪后会自动进入识别画面。</p><p class="small">开发板地址：@@BOARD_URL_HTML@@<br>首次使用须完成板端部署，并把电脑以太网设置到开发板所在网段。以后无需重复部署。</p><a href="@@BOARD_URL_HTML@@/">直接打开识别</a><p class="small">持续等待时，先点“直接打开识别”查看状态，再按复现说明排查网络和相机。关闭窗口仅退出查看；开发板继续处理。</p></div>
+<script>
+const board=@@BOARD_URL_JSON@@;let attempting=false,attempt=0;
+function connect(){if(attempting)return;attempting=true;attempt++;const picture=new Image();let done=false;const timer=setTimeout(()=>finish(false),4500);function finish(ok){if(done)return;done=true;clearTimeout(timer);attempting=false;picture.onload=picture.onerror=null;if(ok){location.replace(board+'/');}else{document.getElementById('status').textContent='等待开发板和摄像头启动…（第 '+attempt+' 次连接）';setTimeout(connect,2000);}}picture.onload=()=>finish(true);picture.onerror=()=>finish(false);picture.src=board+'/raw.jpg?startup='+Date.now();}connect();
+</script></html>
