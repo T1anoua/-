@@ -1,0 +1,13 @@
+﻿字段,值,解释
+验收结果 / 服务,PASS,服务为 enabled、active；帧号推进与两张 JPEG 解码通过
+boot_id,2cea8ed5-9678-4f54-a7fb-dc4f42028a85,标识本次已完成的软件重启
+frame,381,本进程当前已处理帧数；重启后重新计数
+status / target_count,no_target / 0,无有效目标；相机正常出帧
+fps,8.78,该时刻程序报告的平滑处理帧率
+age_s,0.094,最新处理帧距查询的秒数；非端到端延迟
+width × height,640 × 480,图像像素尺寸
+threshold,135.0,该时刻 Otsu 实际阈值；手动保留值为 80
+/raw.jpg,19296 bytes,640×480×3，解码通过
+/snapshot.jpg,20698 bytes,640×480×3，解码通过
+PHY 初始化错误,False,此启动内核未再出现原 PHY 初始化错误
+CMA 高端内存错误,False,此启动内核未再出现该 DMA 错误
