@@ -1,0 +1,21 @@
+[Unit]
+Description=B220 direct USB camera multi-object ore demonstration
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=xilinx
+Group=xilinx
+SupplementaryGroups=video
+WorkingDirectory=/home/xilinx/jupyter_notebooks/ore
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -u /home/xilinx/jupyter_notebooks/ore/app_ps.py --device /dev/video0 --port 8000
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal+console
+StandardError=journal
+SyslogIdentifier=ore-vision
+
+[Install]
+WantedBy=multi-user.target
